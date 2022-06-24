@@ -1,12 +1,14 @@
 import json
 import os
-import pandas as pd
-import random
-import numpy as np
 import pickle
+import random
 from math import isnan
+
+import numpy as np
+import pandas as pd
+
 from config import DIC_AGENTS, DIC_ENVS
-from script import  *
+from script import *
 
 validation_set = [
     "synthetic-over-WE254-EW221-NS671-SN747-1893.xml",
@@ -100,9 +102,9 @@ class ModelPool():
             if not os.path.exists(path_to_log):
                 os.makedirs(path_to_log)
             env = DIC_ENVS[dic_traffic_env_conf["SIMULATOR_TYPE"]](
-                             path_to_log=path_to_log,
-                             path_to_work_directory=self.dic_path["PATH_TO_WORK_DIRECTORY"],
-                             dic_traffic_env_conf=dic_traffic_env_conf)
+                path_to_log=path_to_log,
+                path_to_work_directory=self.dic_path["PATH_TO_WORK_DIRECTORY"],
+                dic_traffic_env_conf=dic_traffic_env_conf)
 
             done = False
             state = env.reset()
@@ -187,9 +189,8 @@ class ModelPool():
         if os.path.exists(os.path.join(records_dir, "test_exp.conf")):
             json.dump(dic_exp_conf, open(os.path.join(records_dir, "test_exp.conf"), "w"))
 
-
         # try:
-        path_to_log = os.path.join(records_dir, "test_round", "round_%d"%cnt_round)
+        path_to_log = os.path.join(records_dir, "test_round", "round_%d" % cnt_round)
         if 1:
             # summary items (duration) from csv
             df_vehicle_inter_0 = pd.read_csv(os.path.join(path_to_log, "vehicle_inter_0.csv"),

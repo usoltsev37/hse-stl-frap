@@ -1,11 +1,11 @@
-import config
 import copy
-from pipeline import Pipeline
 import os
+import sys
 import time
 from multiprocessing import Process
-import sys
-from script import get_traffic_volume
+
+import config
+from pipeline import Pipeline
 
 
 def memo_rename(traffic_file_list):
@@ -23,6 +23,7 @@ def memo_rename(traffic_file_list):
             new_name = traffic_file[:-4]
     new_name = new_name[:-1]
     return new_name
+
 
 def merge(dic_tmp, dic_to_change):
     dic_result = copy.deepcopy(dic_tmp)
@@ -52,17 +53,15 @@ def pipeline_wrapper(dic_exp_conf, dic_agent_conf, dic_traffic_env_conf, dic_pat
 
 
 def main(args=None, memo=None):
-
     traffic_file_list = [
         "inter_0_1786.json",
 
     ]
 
     process_list = []
-    n_workers = args.workers #len(traffic_file_list)
+    n_workers = args.workers  # len(traffic_file_list)
 
     multi_process = True
-
 
     # ind_arg = int(sys.argv[1])
 
@@ -70,14 +69,14 @@ def main(args=None, memo=None):
         memo = "headway_test"
 
     for traffic_file in traffic_file_list:
-        #model_name = "SimpleDQN"
+        # model_name = "SimpleDQN"
         model_name = args.algorithm
         ratio = 1
         dic_exp_conf_extra = {
             "RUN_COUNTS": args.run_counts,
             "TEST_RUN_COUNTS": args.test_run_counts,
             "MODEL_NAME": model_name,
-            "TRAFFIC_FILE": [traffic_file], # here: change to multi_traffic
+            "TRAFFIC_FILE": [traffic_file],  # here: change to multi_traffic
             "ROADNET_FILE": "roadnet_1_1.json",
 
             "NUM_ROUNDS": args.run_round,
@@ -127,7 +126,7 @@ def main(args=None, memo=None):
             "MIN_ACTION_TIME": args.min_action_time,
             "IF_GUI": args.sumo_gui,
             "DEBUG": False,
-            "BINARY_PHASE_EXPANSION": True, # default, args.binary_phase,
+            "BINARY_PHASE_EXPANSION": True,  # default, args.binary_phase,
             "DONE_ENABLE": args.done,
 
             "SIMULATOR_TYPE": [
@@ -330,8 +329,12 @@ def main(args=None, memo=None):
 
         print(traffic_file)
         dic_path_extra = {
-            "PATH_TO_MODEL": os.path.join("model", memo, traffic_file + "_" + time.strftime('%m_%d_%H_%M_%S', time.localtime(time.time())) + postfix),
-            "PATH_TO_WORK_DIRECTORY": os.path.join("records", memo, traffic_file + "_" + time.strftime('%m_%d_%H_%M_%S', time.localtime(time.time())) + postfix),
+            "PATH_TO_MODEL": os.path.join("model", memo, traffic_file + "_" + time.strftime('%m_%d_%H_%M_%S',
+                                                                                            time.localtime(
+                                                                                                time.time())) + postfix),
+            "PATH_TO_WORK_DIRECTORY": os.path.join("records", memo, traffic_file + "_" + time.strftime('%m_%d_%H_%M_%S',
+                                                                                                       time.localtime(
+                                                                                                           time.time())) + postfix),
             "PATH_TO_DATA": os.path.join("data", template),
             "PATH_TO_PRETRAIN_MODEL": os.path.join("model", "initial", traffic_file),
             "PATH_TO_PRETRAIN_WORK_DIRECTORY": os.path.join("records", "initial", traffic_file),
@@ -386,5 +389,4 @@ def main(args=None, memo=None):
 
 
 if __name__ == "__main__":
-
     main()

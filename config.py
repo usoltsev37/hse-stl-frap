@@ -1,8 +1,8 @@
 # parameters and paths
 
-from transfer_dqn_agent import TransferDQNAgent
 # from sumo_env import SumoEnv
 from anon_env import AnonEnv
+from transfer_dqn_agent import TransferDQNAgent
 
 DIC_EXP_CONF = {
     "RUN_COUNTS": 3600,
@@ -144,8 +144,6 @@ _S = {
     "RIGHT": 0,
     "STRAIGHT": 1
 }
-
-
 
 dic_two_phase_expansion = {
     1: [1, 1, 0, 0],

@@ -17,7 +17,7 @@ def get_traffic_volume(traffic_file):
 
         vol = min(max(volume_list[0:2]), max(volume_list[2:]))
 
-        return int(vol/100)*100
+        return int(vol / 100) * 100
     elif "flow" in traffic_file:
         sta = traffic_file.find("flow_1_1_") + len("flow_1_1_")
         end = traffic_file.find(".json")
@@ -32,6 +32,7 @@ def get_traffic_volume(traffic_file):
         traffic = traffic_file.split(".json")[0]
         vol = int(traffic.split("_")[-1])
         return vol
+
 
 ## get total number of vehicles
 ## not very comprehensive

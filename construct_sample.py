@@ -1,6 +1,7 @@
-import numpy as np
-import pickle
 import os
+import pickle
+
+import numpy as np
 
 
 class ConstructSample:
@@ -68,7 +69,7 @@ class ConstructSample:
             r += rs[component] * weight
         return r
 
-    def construct_reward(self,rewards_components, time):
+    def construct_reward(self, rewards_components, time):
 
         rs = self.logging_data[time + self.measure_time - 1]
         assert time + self.measure_time - 1 == rs["time"]
@@ -78,7 +79,7 @@ class ConstructSample:
         # average
         list_r = []
         for t in range(time, time + self.measure_time):
-            #print("t is ", t)
+            # print("t is ", t)
             rs = self.logging_data[t]
             assert t == rs["time"]
             rs = self.get_reward_from_features(rs['state'])
@@ -88,7 +89,7 @@ class ConstructSample:
 
         return r_instant, r_average
 
-    def judge_action(self,time):
+    def judge_action(self, time):
         if self.logging_data[time]['action'] == -1:
             raise ValueError
         else:
@@ -107,14 +108,17 @@ class ConstructSample:
             # construct samples
             for time in range(0, total_time - self.measure_time + 1, self.interval):
                 state = self.construct_state(self.dic_traffic_env_conf["LIST_STATE_FEATURE"], time)
-                reward_instant, reward_average = self.construct_reward(self.dic_traffic_env_conf["DIC_REWARD_INFO"], time)
+                reward_instant, reward_average = self.construct_reward(self.dic_traffic_env_conf["DIC_REWARD_INFO"],
+                                                                       time)
                 action = self.judge_action(time)
 
                 if time + self.interval == total_time:
-                    next_state = self.construct_state(self.dic_traffic_env_conf["LIST_STATE_FEATURE"], time + self.interval - 1)
+                    next_state = self.construct_state(self.dic_traffic_env_conf["LIST_STATE_FEATURE"],
+                                                      time + self.interval - 1)
 
                 else:
-                    next_state = self.construct_state(self.dic_traffic_env_conf["LIST_STATE_FEATURE"], time + self.interval)
+                    next_state = self.construct_state(self.dic_traffic_env_conf["LIST_STATE_FEATURE"],
+                                                      time + self.interval)
                 sample = [state, action, next_state, reward_average, reward_instant, time]
                 list_samples.append(sample)
 
@@ -123,15 +127,13 @@ class ConstructSample:
 
         self.dump_sample(self.samples, "")
 
-    def evaluate_sample(self,list_samples):
+    def evaluate_sample(self, list_samples):
         return list_samples
 
     def dump_sample(self, samples, folder):
         if folder == "":
-            with open(os.path.join(self.parent_dir, "total_samples.pkl"),"ab+") as f:
+            with open(os.path.join(self.parent_dir, "total_samples.pkl"), "ab+") as f:
                 pickle.dump(samples, f, -1)
         else:
             with open(os.path.join(self.path_to_samples, folder, "samples_{0}.pkl".format(folder)), 'wb') as f:
                 pickle.dump(samples, f, -1)
-
-

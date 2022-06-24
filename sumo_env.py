@@ -1,11 +1,11 @@
-import numpy as np
-import os
-import sys
-import pickle
-from sys import platform
-from math import floor, ceil
-import pandas as pd
 import json
+import os
+import pickle
+import sys
+from sys import platform
+
+import numpy as np
+import pandas as pd
 
 # ================
 # initialization checed
@@ -51,7 +51,7 @@ elif platform == "win32":
         else:
             raise EnvironmentError("Please set SUMO_HOME environment variable or install traci as python module!")
 
-elif platform =='darwin':
+elif platform == 'darwin':
     os.environ['SUMO_HOME'] = "/Users/{0}/sumo/".format(os.getlogin())
 
     try:
@@ -72,10 +72,9 @@ else:
     sys.exit("platform error")
 
 
-
-
 def get_traci_constant_mapping(constant_str):
     return getattr(tc, constant_str)
+
 
 class Intersection:
 
@@ -90,9 +89,13 @@ class Intersection:
         # ===== sumo intersection settings =====
 
         self.list_approachs = [str(i) for i in range(dic_sumo_env_conf["N_LEG"])]
-        self.dic_approach_to_node = {str(i): "{0}.node{1}".format(self.node_light, i) for i in self.list_approachs }
-        self.dic_entering_approach_to_edge = {approach: "edge-{0}-{1}".format(self.dic_approach_to_node[approach], self.node_light) for approach in self.list_approachs}
-        self.dic_exiting_approach_to_edge = {approach: "edge-{0}-{1}".format(self.node_light, self.dic_approach_to_node[approach]) for approach in self.list_approachs}
+        self.dic_approach_to_node = {str(i): "{0}.node{1}".format(self.node_light, i) for i in self.list_approachs}
+        self.dic_entering_approach_to_edge = {
+            approach: "edge-{0}-{1}".format(self.dic_approach_to_node[approach], self.node_light) for approach in
+            self.list_approachs}
+        self.dic_exiting_approach_to_edge = {
+            approach: "edge-{0}-{1}".format(self.node_light, self.dic_approach_to_node[approach]) for approach in
+            self.list_approachs}
 
         self.lane_direc = []
         self.lane_direc += ["r" for i in range(dic_sumo_env_conf["LANE_NUM"]["RIGHT"])]
@@ -101,7 +104,6 @@ class Intersection:
         self.num_lane = len(self.lane_direc)
         self.l_lane_ind = [i for i in range(self.num_lane)]
 
-
         self.dic_entering_approach_lanes = {str(i): self.l_lane_ind for i in self.list_approachs}
         self.dic_exiting_approach_lanes = {str(i): self.l_lane_ind for i in self.list_approachs}
 
@@ -109,15 +111,17 @@ class Intersection:
         self.length_lane = 300
         self.length_terminal = 50
         self.length_grid = 5
-        self.num_grid = int(self.length_lane//self.length_grid)
+        self.num_grid = int(self.length_lane // self.length_grid)
 
         # generate all lanes
         self.list_entering_lanes = []
         for approach in self.list_approachs:
-            self.list_entering_lanes += [self.dic_entering_approach_to_edge[approach]+'_'+str(i) for i in self.dic_entering_approach_lanes[approach]]
+            self.list_entering_lanes += [self.dic_entering_approach_to_edge[approach] + '_' + str(i) for i in
+                                         self.dic_entering_approach_lanes[approach]]
         self.list_exiting_lanes = []
         for approach in self.list_approachs:
-            self.list_exiting_lanes += [self.dic_exiting_approach_to_edge[approach] + '_' + str(i) for i in self.dic_exiting_approach_lanes[approach]]
+            self.list_exiting_lanes += [self.dic_exiting_approach_to_edge[approach] + '_' + str(i) for i in
+                                        self.dic_exiting_approach_lanes[approach]]
         self.list_lanes = self.list_entering_lanes + self.list_exiting_lanes
 
         # generate signals
@@ -127,7 +131,7 @@ class Intersection:
         self.dic_phase_strs = {}
 
         for p in self.list_phases:
-            list_default_str = ["r" for i in range(self.num_lane*len(self.list_approachs))]
+            list_default_str = ["r" for i in range(self.num_lane * len(self.list_approachs))]
 
             # set green for right turn
             for any_app in self.list_approachs:
@@ -145,8 +149,8 @@ class Intersection:
                 list_default_str[self.dic_app_offset[app2] * self.num_lane + ind_this_direc] = 'G'
             self.dic_phase_strs[p] = "".join(list_default_str)
 
-        self.all_yellow_phase_str = "".join(["y" for i in range(self.num_lane*len(self.list_approachs))])
-        self.all_red_phase_str = "".join(["r" for i in range(self.num_lane*len(self.list_approachs))])
+        self.all_yellow_phase_str = "".join(["y" for i in range(self.num_lane * len(self.list_approachs))])
+        self.all_red_phase_str = "".join(["r" for i in range(self.num_lane * len(self.list_approachs))])
 
         self.all_yellow_phase_index = -1
         self.all_red_phase_index = -2
@@ -170,16 +174,16 @@ class Intersection:
         self.list_vehicles_previous_step = []
 
         self.dic_vehicle_min_speed = {}  # this second
-        self.dic_vehicle_arrive_leave_time = dict() # cumulative
+        self.dic_vehicle_arrive_leave_time = dict()  # cumulative
 
-        self.dic_feature = {} # this second
+        self.dic_feature = {}  # this second
 
     def set_signal(self, action, action_pattern, yellow_time, all_red_time):
 
         if self.all_yellow_flag:
             # in yellow phase
             self.flicker = 0
-            if self.current_phase_duration >= yellow_time: # yellow time reached
+            if self.current_phase_duration >= yellow_time:  # yellow time reached
                 self.current_phase_index = self.next_phase_to_set_index
                 traci.trafficlights.setRedYellowGreenState(
                     self.node_light, self.dic_phase_strs[self.list_phases[self.current_phase_index]])
@@ -188,21 +192,21 @@ class Intersection:
                 pass
         else:
             # determine phase
-            if action_pattern == "switch": # switch by order
-                if action == 0: # keep the phase
+            if action_pattern == "switch":  # switch by order
+                if action == 0:  # keep the phase
                     self.next_phase_to_set_index = self.current_phase_index
-                elif action == 1: # change to the next phase
+                elif action == 1:  # change to the next phase
                     self.next_phase_to_set_index = (self.current_phase_index + 1) % len(self.list_phases)
                 else:
                     sys.exit("action not recognized\n action must be 0 or 1")
 
-            elif action_pattern == "set": # set to certain phase
+            elif action_pattern == "set":  # set to certain phase
                 self.next_phase_to_set_index = action
 
             # set phase
-            if self.current_phase_index == self.next_phase_to_set_index: # the light phase keeps unchanged
+            if self.current_phase_index == self.next_phase_to_set_index:  # the light phase keeps unchanged
                 pass
-            else: # the light phase needs to change
+            else:  # the light phase needs to change
                 # change to yellow first, and activate the counter and flag
                 traci.trafficlights.setRedYellowGreenState(
                     self.node_light, self.all_yellow_phase_str)
@@ -245,7 +249,8 @@ class Intersection:
             traci.vehicle.subscribe(vehicle, [getattr(tc, var) for var in self.list_vehicle_variables_to_sub])
 
         # vehicle level observations
-        self.dic_vehicle_sub_current_step = {vehicle: traci.vehicle.getSubscriptionResults(vehicle) for vehicle in self.list_vehicles_current_step}
+        self.dic_vehicle_sub_current_step = {vehicle: traci.vehicle.getSubscriptionResults(vehicle) for vehicle in
+                                             self.list_vehicles_current_step}
 
         # update vehicle arrive and left time
         self._update_arrive_time(list_vehicles_new_arrive)
@@ -271,8 +276,10 @@ class Intersection:
             for lane in self.list_entering_lanes:
                 list_entering_lane_vehicle_left.append(
                     list(
-                        set(self.dic_lane_sub_previous_step[lane][get_traci_constant_mapping("LAST_STEP_VEHICLE_ID_LIST")]) - \
-                        set(self.dic_lane_sub_current_step[lane][get_traci_constant_mapping("LAST_STEP_VEHICLE_ID_LIST")])
+                        set(self.dic_lane_sub_previous_step[lane][
+                                get_traci_constant_mapping("LAST_STEP_VEHICLE_ID_LIST")]) - \
+                        set(self.dic_lane_sub_current_step[lane][
+                                get_traci_constant_mapping("LAST_STEP_VEHICLE_ID_LIST")])
                     )
                 )
         return list_entering_lane_vehicle_left
@@ -308,7 +315,7 @@ class Intersection:
         dic_result = {}
         for vec_id, vec_var in self.dic_vehicle_sub_current_step.items():
             speed = vec_var[get_traci_constant_mapping("VAR_SPEED")]
-            if vec_id in self.dic_vehicle_min_speed: # this vehicle appeared in previous time stamps:
+            if vec_id in self.dic_vehicle_min_speed:  # this vehicle appeared in previous time stamps:
                 dic_result[vec_id] = min(speed, self.dic_vehicle_min_speed[vec_id])
             else:
                 dic_result[vec_id] = speed
@@ -320,14 +327,17 @@ class Intersection:
 
         dic_feature["cur_phase"] = [self.current_phase_index]
         dic_feature["time_this_phase"] = [self.current_phase_duration]
-        dic_feature["vehicle_position_img"] = None #self._get_lane_vehicle_position(self.list_entering_lanes)
-        dic_feature["vehicle_speed_img"] = None #self._get_lane_vehicle_speed(self.list_entering_lanes)
+        dic_feature["vehicle_position_img"] = None  # self._get_lane_vehicle_position(self.list_entering_lanes)
+        dic_feature["vehicle_speed_img"] = None  # self._get_lane_vehicle_speed(self.list_entering_lanes)
         dic_feature["vehicle_acceleration_img"] = None
-        dic_feature["vehicle_waiting_time_img"] = None #self._get_lane_vehicle_accumulated_waiting_time(self.list_entering_lanes)
+        dic_feature[
+            "vehicle_waiting_time_img"] = None  # self._get_lane_vehicle_accumulated_waiting_time(self.list_entering_lanes)
 
         dic_feature["lane_num_vehicle"] = self._get_lane_num_vehicle(self.list_entering_lanes)
-        dic_feature["lane_num_vehicle_been_stopped_thres01"] = self._get_lane_num_vehicle_been_stopped(0.1, self.list_entering_lanes)
-        dic_feature["lane_num_vehicle_been_stopped_thres1"] = self._get_lane_num_vehicle_been_stopped(1, self.list_entering_lanes)
+        dic_feature["lane_num_vehicle_been_stopped_thres01"] = self._get_lane_num_vehicle_been_stopped(0.1,
+                                                                                                       self.list_entering_lanes)
+        dic_feature["lane_num_vehicle_been_stopped_thres1"] = self._get_lane_num_vehicle_been_stopped(1,
+                                                                                                      self.list_entering_lanes)
         dic_feature["lane_queue_length"] = self._get_lane_queue_length(self.list_entering_lanes)
         dic_feature["lane_num_vehicle_left"] = None
         dic_feature["lane_sum_duration_vehicle_left"] = None
@@ -394,8 +404,7 @@ class Intersection:
 
     def _get_position_grid_along_lane(self, vec):
         pos = int(self.dic_vehicle_sub_current_step[vec][get_traci_constant_mapping("VAR_LANEPOSITION")])
-        return min(pos//self.length_grid, self.num_grid)
-
+        return min(pos // self.length_grid, self.num_grid)
 
     def _get_lane_vehicle_position(self, list_lanes):
 
@@ -429,7 +438,8 @@ class Intersection:
             list_vec_id = self.dic_lane_sub_current_step[lane][get_traci_constant_mapping("LAST_STEP_VEHICLE_ID_LIST")]
             for vec in list_vec_id:
                 pos_grid = self._get_position_grid_along_lane(vec)
-                lane_vector[pos_grid] = self.dic_vehicle_sub_current_step[vec][get_traci_constant_mapping("VAR_ACCUMULATED_WAITING_TIME")]
+                lane_vector[pos_grid] = self.dic_vehicle_sub_current_step[vec][
+                    get_traci_constant_mapping("VAR_ACCUMULATED_WAITING_TIME")]
             list_lane_vector.append(lane_vector)
         return np.array(list_lane_vector)
 
@@ -448,7 +458,8 @@ class Intersection:
 
     def get_state(self, list_state_features):
 
-        dic_state = {state_feature_name: self.dic_feature[state_feature_name] for state_feature_name in list_state_features}
+        dic_state = {state_feature_name: self.dic_feature[state_feature_name] for state_feature_name in
+                     list_state_features}
 
         return dic_state
 
@@ -461,7 +472,8 @@ class Intersection:
         dic_reward["sum_lane_num_vehicle_left"] = None
         dic_reward["sum_duration_vehicle_left"] = None
         dic_reward["sum_num_vehicle_been_stopped_thres01"] = None
-        dic_reward["sum_num_vehicle_been_stopped_thres1"] = np.sum(self.dic_feature["lane_num_vehicle_been_stopped_thres1"])
+        dic_reward["sum_num_vehicle_been_stopped_thres1"] = np.sum(
+            self.dic_feature["lane_num_vehicle_been_stopped_thres1"])
 
         reward = 0
         for r in dic_reward_info:
@@ -478,9 +490,7 @@ class Intersection:
             return None, None
 
 
-
 class SumoEnv:
-
     # add more variables here if you need more measurements
     LIST_LANE_VARIABLES_TO_SUB = [
         "LAST_STEP_VEHICLE_NUMBER",
@@ -514,8 +524,8 @@ class SumoEnv:
             else:
                 sys.exit("linux sumo binary path error")
             # for FIB-Server
-            #sumo_binary = r"/usr/bin/sumo/bin/sumo-gui"
-            #sumo_binary_nogui = r"/usr/bin/sumo"
+            # sumo_binary = r"/usr/bin/sumo/bin/sumo-gui"
+            # sumo_binary_nogui = r"/usr/bin/sumo"
         elif platform == "darwin":
             sumo_binary = r"/opt/local/bin/sumo-gui"
             sumo_binary_nogui = r"/opt/local/bin/sumo"
@@ -525,20 +535,21 @@ class SumoEnv:
         else:
             sys.exit("platform error")
 
-        real_path_to_sumo_files = os.path.join(os.path.split(os.path.realpath(__file__))[0], self.path_to_work_directory, "cross.sumocfg")
+        real_path_to_sumo_files = os.path.join(os.path.split(os.path.realpath(__file__))[0],
+                                               self.path_to_work_directory, "cross.sumocfg")
 
         sumo_cmd = [sumo_binary,
-                   '-c',
-                   r'{0}'.format(real_path_to_sumo_files),
-                   "--step-length",
-                   str(self.dic_traffic_env_conf["INTERVAL"])
+                    '-c',
+                    r'{0}'.format(real_path_to_sumo_files),
+                    "--step-length",
+                    str(self.dic_traffic_env_conf["INTERVAL"])
                     ]
 
         sumo_cmd_nogui = [sumo_binary_nogui,
-                         '-c',
-                         r'{0}'.format(real_path_to_sumo_files),
-                         "--step-length",
-                         str(self.dic_traffic_env_conf["INTERVAL"])
+                          '-c',
+                          r'{0}'.format(real_path_to_sumo_files),
+                          "--step-length",
+                          str(self.dic_traffic_env_conf["INTERVAL"])
                           ]
 
         if self.dic_traffic_env_conf["IF_GUI"]:
@@ -560,9 +571,9 @@ class SumoEnv:
 
         # check min action time
         if self.dic_traffic_env_conf["MIN_ACTION_TIME"] <= self.dic_traffic_env_conf["YELLOW_TIME"]:
-            print ("MIN_ACTION_TIME should include YELLOW_TIME")
+            print("MIN_ACTION_TIME should include YELLOW_TIME")
             pass
-            #raise ValueError
+            # raise ValueError
 
         # touch new inter_{}.pkl (if exists, remove)
         for inter_ind in range(self.dic_traffic_env_conf["NUM_INTERSECTIONS"]):
@@ -578,7 +589,8 @@ class SumoEnv:
         self.list_intersection = []
         for i in range(self.dic_traffic_env_conf["NUM_INTERSECTIONS"]):
             for j in range(self.dic_traffic_env_conf["NUM_INTERSECTIONS"]):
-                self.list_intersection.append(Intersection("{0}_{1}".format(i, j), self.LIST_VEHICLE_VARIABLES_TO_SUB, self.dic_traffic_env_conf))
+                self.list_intersection.append(
+                    Intersection("{0}_{1}".format(i, j), self.LIST_VEHICLE_VARIABLES_TO_SUB, self.dic_traffic_env_conf))
 
         self.list_inter_log = [[] for i in range(len(self.list_intersection))]
         # get lanes list
@@ -587,14 +599,14 @@ class SumoEnv:
             self.list_lanes += inter.list_lanes
         self.list_lanes = np.unique(self.list_lanes).tolist()
 
-        print ("start sumo")
+        print("start sumo")
         while True:
             try:
                 traci.start(self.sumo_cmd_str)
                 break
             except:
                 continue
-        print ("succeed in start sumo")
+        print("succeed in start sumo")
 
         # start subscription
         for lane in self.list_lanes:
@@ -640,7 +652,6 @@ class SumoEnv:
             pickle.dump(self.list_inter_log[inter_ind], f)
             f.close()
 
-
     def end_sumo(self):
         traci.close()
 
@@ -654,14 +665,16 @@ class SumoEnv:
 
     def get_state(self):
 
-        list_state = [inter.get_state(self.dic_traffic_env_conf["LIST_STATE_FEATURE"]) for inter in self.list_intersection]
+        list_state = [inter.get_state(self.dic_traffic_env_conf["LIST_STATE_FEATURE"]) for inter in
+                      self.list_intersection]
         done = self._check_episode_done(list_state)
 
         return list_state, done
 
     def get_reward(self):
 
-        list_reward = [inter.get_reward(self.dic_traffic_env_conf["DIC_REWARD_INFO"]) for inter in self.list_intersection]
+        list_reward = [inter.get_reward(self.dic_traffic_env_conf["DIC_REWARD_INFO"]) for inter in
+                       self.list_intersection]
 
         return list_reward
 
@@ -680,14 +693,14 @@ class SumoEnv:
 
         for inter_ind in range(len(self.list_intersection)):
             self.list_inter_log[inter_ind].append({"time": cur_time,
-                                                    "state": before_action_feature[inter_ind],
-                                                    "action": action[inter_ind]})
+                                                   "state": before_action_feature[inter_ind],
+                                                   "action": action[inter_ind]})
 
     def step(self, action):
 
         list_action_in_sec = [action]
         list_action_in_sec_display = [action]
-        for i in range(self.dic_traffic_env_conf["MIN_ACTION_TIME"]-1):
+        for i in range(self.dic_traffic_env_conf["MIN_ACTION_TIME"] - 1):
             if self.dic_traffic_env_conf["ACTION_PATTERN"] == "switch":
                 list_action_in_sec.append(np.zeros_like(action).tolist())
             elif self.dic_traffic_env_conf["ACTION_PATTERN"] == "set":
@@ -706,22 +719,27 @@ class SumoEnv:
             state = self.get_state()
 
             if self.dic_traffic_env_conf["DEBUG"]:
-                print("time: {0}, phase: {1}, time this phase: {2}, action: {3}".format(instant_time, before_action_feature[0]["cur_phase"], before_action_feature[0]["time_this_phase"], action_in_sec_display[0]))
-            else:
-                if i == 0:
-                    print("time: {0}, phase: {1}, time this phase: {2}, action: {3}".format(instant_time,
+                print("time: {0}, phase: {1}, time this phase: {2}, action: {3}".format(instant_time,
                                                                                         before_action_feature[0][
                                                                                             "cur_phase"],
                                                                                         before_action_feature[0][
                                                                                             "time_this_phase"],
                                                                                         action_in_sec_display[0]))
+            else:
+                if i == 0:
+                    print("time: {0}, phase: {1}, time this phase: {2}, action: {3}".format(instant_time,
+                                                                                            before_action_feature[0][
+                                                                                                "cur_phase"],
+                                                                                            before_action_feature[0][
+                                                                                                "time_this_phase"],
+                                                                                            action_in_sec_display[0]))
 
             # _step
             self._inner_step(action_in_sec)
 
             # get reward
             reward = self.get_reward()
-            average_reward_action = (average_reward_action*i + reward[0])/(i+1)
+            average_reward_action = (average_reward_action * i + reward[0]) / (i + 1)
 
             # log
             self.log(cur_time=instant_time, before_action_feature=before_action_feature, action=action_in_sec_display)
@@ -747,14 +765,14 @@ class SumoEnv:
 
         # run one step
 
-        for i in range(int(1/self.dic_traffic_env_conf["INTERVAL"])):
+        for i in range(int(1 / self.dic_traffic_env_conf["INTERVAL"])):
             traci.simulationStep()
 
         # get new measurements
         for inter in self.list_intersection:
             inter.update_current_measurements()
 
-        #self.log_lane_vehicle_position()
+        # self.log_lane_vehicle_position()
         if self.dic_traffic_env_conf["LOG_DEBUG"]:
             self.log_first_vehicle()
             self.log_phase()
@@ -780,7 +798,8 @@ class SumoEnv:
         }
         for inter in self.list_intersection:
             for lane in inter.list_entering_lanes:
-                print(str(self.get_current_time()) + ", " + lane + ", " + list_to_str(inter._get_lane_vehicle_position([lane])[0]),
+                print(str(self.get_current_time()) + ", " + lane + ", " + list_to_str(
+                    inter._get_lane_vehicle_position([lane])[0]),
                       file=open(os.path.join(self.path_to_log, "lane_vehicle_position_%s.txt" % dic_lane_map[lane]),
                                 "a"))
 
@@ -795,7 +814,7 @@ class SumoEnv:
                 veh_id_2 = _veh_id_2 + str(i)
                 pos, speed = inter._get_vehicle_info(veh_id)
                 pos_2, speed_2 = inter._get_vehicle_info(veh_id_2)
-                #print(i, veh_id, pos, veh_id_2, speed, pos_2, speed_2)
+                # print(i, veh_id, pos, veh_id_2, speed, pos_2, speed_2)
 
                 if not os.path.exists(os.path.join(self.path_to_log, "first_vehicle_info_a")):
                     os.makedirs(os.path.join(self.path_to_log, "first_vehicle_info_a"))
@@ -805,10 +824,14 @@ class SumoEnv:
 
                 if pos and speed:
                     print("%f, %f, %f" % (self.get_current_time(), pos, speed),
-                          file=open(os.path.join(self.path_to_log, "first_vehicle_info_a", "first_vehicle_info_a_%d.txt"%i), "a"))
+                          file=open(
+                              os.path.join(self.path_to_log, "first_vehicle_info_a", "first_vehicle_info_a_%d.txt" % i),
+                              "a"))
                 if pos_2 and speed_2:
                     print("%f, %f, %f" % (self.get_current_time(), pos_2, speed_2),
-                          file=open(os.path.join(self.path_to_log, "first_vehicle_info_b", "first_vehicle_info_b_%d.txt"%i), "a"))
+                          file=open(
+                              os.path.join(self.path_to_log, "first_vehicle_info_b", "first_vehicle_info_b_%d.txt" % i),
+                              "a"))
 
                 veh_id_3 = _veh_id_3 + str(i)
                 veh_id_4 = _veh_id_4 + str(i)
@@ -832,7 +855,7 @@ class SumoEnv:
                               os.path.join(self.path_to_log, "first_vehicle_info_d", "first_vehicle_info_b_%d.txt" % i),
                               "a"))
 
-        #for inter in self.list_intersection:
+        # for inter in self.list_intersection:
         #    pos, speed = inter._get_vehicle_info(veh_id)
         #    pos_2, speed_2 = inter._get_vehicle_info(veh_id_2)
         #    if pos and speed:
@@ -846,4 +869,3 @@ class SumoEnv:
         for inter in self.list_intersection:
             print("%f, %f" % (self.get_current_time(), inter.current_phase_index),
                   file=open(os.path.join(self.path_to_log, "log_phase.txt"), "a"))
-

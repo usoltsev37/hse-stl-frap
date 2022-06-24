@@ -1,11 +1,12 @@
-import os
 import copy
+import os
+
 from config import DIC_AGENTS, DIC_ENVS
 
 
 class Generator:
-    def __init__(self, cnt_round, cnt_gen, dic_path, dic_exp_conf, dic_agent_conf, dic_traffic_env_conf, best_round=None):
-
+    def __init__(self, cnt_round, cnt_gen, dic_path, dic_exp_conf, dic_agent_conf, dic_traffic_env_conf,
+                 best_round=None):
 
         self.cnt_round = cnt_round
         self.cnt_gen = cnt_gen
@@ -32,7 +33,8 @@ class Generator:
             )
 
         else:
-            self.path_to_log = os.path.join(self.dic_path["PATH_TO_WORK_DIRECTORY"], "train_round", "round_"+str(self.cnt_round), "generator_"+str(self.cnt_gen))
+            self.path_to_log = os.path.join(self.dic_path["PATH_TO_WORK_DIRECTORY"], "train_round",
+                                            "round_" + str(self.cnt_round), "generator_" + str(self.cnt_gen))
             if not os.path.exists(self.path_to_log):
                 os.makedirs(self.path_to_log)
 
@@ -46,21 +48,20 @@ class Generator:
             )
 
         self.env = DIC_ENVS[dic_traffic_env_conf["SIMULATOR_TYPE"]](
-                              path_to_log = self.path_to_log,
-                              path_to_work_directory = self.dic_path["PATH_TO_WORK_DIRECTORY"],
-                              dic_traffic_env_conf = self.dic_traffic_env_conf)
+            path_to_log=self.path_to_log,
+            path_to_work_directory=self.dic_path["PATH_TO_WORK_DIRECTORY"],
+            dic_traffic_env_conf=self.dic_traffic_env_conf)
 
     def generate(self):
-
 
         done = False
         state = self.env.reset()
         step_num = 0
         stop_cnt = 0
-        while not done and step_num < int(self.dic_exp_conf["RUN_COUNTS"]/self.dic_traffic_env_conf["MIN_ACTION_TIME"]):
+        while not done and step_num < int(
+                self.dic_exp_conf["RUN_COUNTS"] / self.dic_traffic_env_conf["MIN_ACTION_TIME"]):
             action_list = []
             for one_state in state:
-
                 action = self.agent.choose_action(step_num, one_state)
 
                 action_list.append(action)
@@ -74,5 +75,5 @@ class Generator:
 
         if self.dic_traffic_env_conf["DONE_ENABLE"]:
             run_cnt_log = open(os.path.join(self.dic_path["PATH_TO_WORK_DIRECTORY"], "generator_stop_cnt_log.txt"), "a")
-            run_cnt_log.write("%s, %10s, %d\n"%("generator", "round_"+str(self.cnt_round), stop_cnt))
+            run_cnt_log.write("%s, %10s, %d\n" % ("generator", "round_" + str(self.cnt_round), stop_cnt))
             run_cnt_log.close()

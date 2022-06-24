@@ -1,12 +1,14 @@
-import pickle as pkl
-import os
-import pandas as pd
-import numpy as np
-import json
 import copy
+import json
+import os
+import pickle as pkl
 from math import isnan
+
 import matplotlib as mlp
-from script import  *
+import numpy as np
+import pandas as pd
+
+from script import *
 
 mlp.use("agg")
 import matplotlib.pyplot as plt
@@ -151,7 +153,7 @@ def padding_duration(performance_duration):
     for traffic_name in performance_duration.keys():
         max_duration_length = max([len(x[0]) for x in performance_duration[traffic_name]])
         for i, ti in enumerate(performance_duration[traffic_name]):
-            performance_duration[traffic_name][i][0].extend((max_duration_length - len(ti[0]))*[ti[0][-1]])
+            performance_duration[traffic_name][i][0].extend((max_duration_length - len(ti[0])) * [ti[0][-1]])
 
     return performance_duration
 
@@ -266,15 +268,13 @@ def summary_detail_train(memo, total_summary):
                             list_duration_seg[i] = ave_duration_seg
                             list_duration_id_seg[i] = int(round[6:])
 
-
-                list_duration_seg = np.array(list_duration_seg)/cnt_gen
+                list_duration_seg = np.array(list_duration_seg) / cnt_gen
                 for j in range(num_seg):
                     key = "min_duration-" + str(j)
                     if key not in round_summary.keys():
                         round_summary[key] = [list_duration_seg[j]]
                     else:
                         round_summary[key].append(list_duration_seg[j])
-
 
                 duration_each_round_list.append(duration_gens / cnt_gen)
                 queue_length_each_round_list.append(queue_length_gens / cnt_gen / sample_num)
@@ -285,11 +285,11 @@ def summary_detail_train(memo, total_summary):
                     min_queue_length_id = int(round[6:])
 
                 valid_flag = json.load(open(os.path.join(gen_dir, "valid_flag.json")))
-                if valid_flag['0']: # temporary for one intersection
+                if valid_flag['0']:  # temporary for one intersection
                     if min_duration > duration_gens / cnt_gen:
                         min_duration = duration_gens / cnt_gen
                         min_duration_ind = int(round[6:])
-                #print(nan_num, nan_thres)
+                # print(nan_num, nan_thres)
 
             except:
                 # change anomaly label from nan to -1000 for the convenience of following computation
@@ -320,8 +320,6 @@ def summary_detail_train(memo, total_summary):
                 performance_at_min_duration_round[traffic_name] = [(duration_each_segment_list, traffic_time)]
             else:
                 performance_at_min_duration_round[traffic_name].append((duration_each_segment_list, traffic_time))
-
-
 
         # total_summary
         total_summary = get_metrics(duration_each_round_list, queue_length_each_round_list,
@@ -359,7 +357,7 @@ def summary_detail_test(memo, total_summary):
         if ".xml" not in traffic_file and ".json" not in traffic_file:
             continue
 
-        #if "cross.2phases_rou01_equal_700.xml_12_11_08_16_00" != traffic_file:
+        # if "cross.2phases_rou01_equal_700.xml_12_11_08_16_00" != traffic_file:
         #    continue
         print(traffic_file)
 
@@ -371,7 +369,7 @@ def summary_detail_test(memo, total_summary):
         dic_exp_conf = json.load(exp_conf)
         run_counts = dic_exp_conf["RUN_COUNTS"]
         num_rounds = dic_exp_conf["NUM_ROUNDS"]
-        num_seg = run_counts//3600
+        num_seg = run_counts // 3600
 
         traffic_vol = get_total_traffic_volume(dic_exp_conf["TRAFFIC_FILE"][0])
         nan_thres = 120
@@ -466,7 +464,7 @@ def summary_detail_test(memo, total_summary):
                     min_queue_length_id = int(round[6:])
 
                 valid_flag = json.load(open(os.path.join(round_dir, "valid_flag.json")))
-                #if valid_flag['0']:  # temporary for one intersection
+                # if valid_flag['0']:  # temporary for one intersection
                 if vehicle_out > total_vol * 0.9:
                     if min_duration > ave_duration and ave_duration > 24:
                         print(">", traffic_file)
@@ -478,8 +476,8 @@ def summary_detail_test(memo, total_summary):
                     for i, interval in enumerate(range(0, run_counts, 3600)):
                         did = np.bitwise_and(df_vehicle_inter_0["enter_time"].values < interval + 3600,
                                              df_vehicle_inter_0["enter_time"].values > interval)
-                        #vehicle_in_seg = sum([int(x) for x in (df_vehicle_inter_0["enter_time"][did].values > 0)])
-                        #vehicle_out_seg = sum([int(x) for x in (df_vehicle_inter_0["leave_time"][did].values > 0)])
+                        # vehicle_in_seg = sum([int(x) for x in (df_vehicle_inter_0["enter_time"][did].values > 0)])
+                        # vehicle_out_seg = sum([int(x) for x in (df_vehicle_inter_0["leave_time"][did].values > 0)])
                         duration_seg = df_vehicle_inter_0["leave_time"][did].values - df_vehicle_inter_0["enter_time"][
                             did].values
                         ave_duration_seg = np.mean([time for time in duration_seg if not isnan(time)])
@@ -499,15 +497,15 @@ def summary_detail_test(memo, total_summary):
                             list_duration_seg[i] = ave_duration_seg
                             list_duration_id_seg[i] = int(round[6:])
 
-                        #round_summary = {}
+                        # round_summary = {}
                     for j in range(num_seg):
                         key = "min_duration-" + str(j)
                         if key not in round_summary.keys():
                             round_summary[key] = [list_duration_seg[j]]
                         else:
                             round_summary[key].append(list_duration_seg[j])
-                    #round_result_dir = os.path.join("summary", memo, traffic_file)
-                    #if not os.path.exists(round_result_dir):
+                    # round_result_dir = os.path.join("summary", memo, traffic_file)
+                    # if not os.path.exists(round_result_dir):
                     #    os.makedirs(round_result_dir)
 
             except:
@@ -541,7 +539,6 @@ def summary_detail_test(memo, total_summary):
                 performance_at_min_duration_round[traffic_name] = [(duration_each_segment_list, traffic_time)]
             else:
                 performance_at_min_duration_round[traffic_name].append((duration_each_segment_list, traffic_time))
-
 
         # print(os.path.join(result_dir, "test_results.csv"))
 
@@ -663,7 +660,7 @@ def main(memo=None):
     }
     if not memo:
         memo = "pipeline_500"
-    #summary_detail_train(memo, copy.deepcopy(total_summary))
+    # summary_detail_train(memo, copy.deepcopy(total_summary))
     summary_detail_test(memo, copy.deepcopy(total_summary))
     # summary_detail_test_segments(memo, copy.deepcopy(total_summary))
 
@@ -688,4 +685,4 @@ if __name__ == "__main__":
     summary_detail_train(memo, copy.deepcopy(total_summary))
     summary_detail_test(memo, copy.deepcopy(total_summary))
     # summary_detail_baseline(memo)
-    #summary_detail_test_segments(memo, copy.deepcopy(total_summary))
+    # summary_detail_test_segments(memo, copy.deepcopy(total_summary))

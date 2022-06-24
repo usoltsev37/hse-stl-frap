@@ -1,11 +1,12 @@
-from keras.layers import Input, Dense, Flatten, Reshape, Layer, Lambda, RepeatVector, Activation, Embedding, Conv2D
-from keras.models import Model, model_from_json, load_model
-from keras.optimizers import RMSprop, Adam
-# from keras.layers.merge import concatenate, add, dot, maximum, multiply
-from keras.layers import concatenate, add, dot, maximum, multiply
-from network_agent import NetworkAgent, conv2d_bn, Selector
-from keras import backend as K
 import numpy as np
+from keras import backend as K
+from keras.layers import Input, Dense, Reshape, Lambda, Activation, Embedding, Conv2D
+# from keras.layers.merge import concatenate, add, dot, maximum, multiply
+from keras.layers import concatenate, add, multiply
+from keras.models import Model
+from keras.optimizers import Adam
+
+from network_agent import NetworkAgent
 
 
 def slice_tensor(x, index):
@@ -13,8 +14,7 @@ def slice_tensor(x, index):
     if len(x_shape) == 3:
         return x[:, index, :]
     elif len(x_shape) == 2:
-        return Reshape((1, ))(x[:, index])
-
+        return Reshape((1,))(x[:, index])
 
 
 def cal_lane_demand(num_vec, phase, feature_shape, dic_agent_conf):
@@ -63,16 +63,19 @@ def _share_cooperate_network(x):
 def _share_compete_network(x):
     return x
 
+
 def compete_max(x):
     return K.max(x, axis=1)
+
 
 def share_compete_network(p, dic_agent_conf, ind):
     # share_competing network
     print("&& ", len(K.int_shape(p)), K.int_shape(p))
-    dense1 = Dense(dic_agent_conf["D_DENSE"], activation="relu", name="dense1_%d"%ind)(p)
-    dense2 = Dense(dic_agent_conf["D_DENSE"], activation="relu", name="dense2_%d"%ind)(dense1)
-    q_values = Dense(1, activation="linear", name="q_values_%d"%ind)(dense2)
+    dense1 = Dense(dic_agent_conf["D_DENSE"], activation="relu", name="dense1_%d" % ind)(p)
+    dense2 = Dense(dic_agent_conf["D_DENSE"], activation="relu", name="dense2_%d" % ind)(dense1)
+    q_values = Dense(1, activation="linear", name="q_values_%d" % ind)(dense2)
     return q_values
+
 
 def competing_network(p, dic_agent_conf, num_actions):
     # competing network
@@ -80,6 +83,7 @@ def competing_network(p, dic_agent_conf, num_actions):
     dense2 = Dense(dic_agent_conf["D_DENSE"], activation="relu", name="dense2")(dense1)
     q_values = Dense(num_actions, activation="linear", name="q_values")(dense2)
     return q_values
+
 
 def relation(x, dic_traffic_env_conf):
     relations = []
@@ -109,11 +113,13 @@ class TransferDQNAgent(NetworkAgent):
         feature_shape = {}
         for feature_name in self.dic_traffic_env_conf["LIST_STATE_FEATURE"]:
             if "phase" in feature_name and self.dic_traffic_env_conf["BINARY_PHASE_EXPANSION"]:
-                _shape = (self.dic_traffic_env_conf["DIC_FEATURE_DIM"]["D_" + feature_name.upper()][0] * self.num_lanes * 4,)
+                _shape = (
+                self.dic_traffic_env_conf["DIC_FEATURE_DIM"]["D_" + feature_name.upper()][0] * self.num_lanes * 4,)
             elif "phase" in feature_name and not self.dic_traffic_env_conf["BINARY_PHASE_EXPANSION"]:
                 _shape = self.dic_traffic_env_conf["DIC_FEATURE_DIM"]["D_" + feature_name.upper()]
             else:
-                _shape = (self.dic_traffic_env_conf["DIC_FEATURE_DIM"]["D_" + feature_name.upper()][0] * self.num_lanes,)
+                _shape = (
+                self.dic_traffic_env_conf["DIC_FEATURE_DIM"]["D_" + feature_name.upper()][0] * self.num_lanes,)
             dic_input_node[feature_name] = Input(shape=_shape, name="input_" + feature_name)
             feature_shape[feature_name] = _shape[0]
 
@@ -130,7 +136,8 @@ class TransferDQNAgent(NetworkAgent):
             lane_embedding = Dense(16, activation="relu", name="lane_embedding")
             for phase in self.dic_traffic_env_conf["PHASE"]:
                 m1, m2 = phase.split("_")
-                list_phase_pressure.append(add([lane_embedding(dic_lane[m1]), lane_embedding(dic_lane[m2])], name=phase))
+                list_phase_pressure.append(
+                    add([lane_embedding(dic_lane[m1]), lane_embedding(dic_lane[m2])], name=phase))
         elif self.num_actions == 4:
             list_phase_pressure = []
             for phase in self.dic_traffic_env_conf["PHASE"]:
@@ -138,7 +145,7 @@ class TransferDQNAgent(NetworkAgent):
                 list_phase_pressure.append(concatenate([dic_lane[m1], dic_lane[m2]], name=phase))
 
         constant = Lambda(relation, arguments={"dic_traffic_env_conf": self.dic_traffic_env_conf},
-                        name="constant")(dic_input_node["lane_num_vehicle"])
+                          name="constant")(dic_input_node["lane_num_vehicle"])
         relation_embedding = Embedding(2, 4, name="relation_embedding")(constant)
 
         # rotate the phase pressure
@@ -155,7 +162,8 @@ class TransferDQNAgent(NetworkAgent):
 
             list_phase_pressure_recomb = concatenate(list_phase_pressure_recomb, name="concat_all")
             feature_map = Reshape((8, 7, 32))(list_phase_pressure_recomb)
-            lane_conv = Conv2D(self.dic_agent_conf["D_DENSE"], kernel_size=(1, 1), activation="relu", name="lane_conv")(feature_map)
+            lane_conv = Conv2D(self.dic_agent_conf["D_DENSE"], kernel_size=(1, 1), activation="relu", name="lane_conv")(
+                feature_map)
             if self.dic_agent_conf["MERGE"] == "multiply":
                 relation_conv = Conv2D(self.dic_agent_conf["D_DENSE"], kernel_size=(1, 1), activation="relu",
                                        name="relation_conv")(relation_embedding)
@@ -165,7 +173,8 @@ class TransferDQNAgent(NetworkAgent):
                                        name="relation_conv")(relation_embedding)
                 combine_feature = concatenate([lane_conv, relation_conv], name="combine_feature")
             elif self.dic_agent_conf["MERGE"] == "weight":
-                relation_conv = Conv2D(1, kernel_size=(1, 1), activation="relu", name="relation_conv")(relation_embedding)
+                relation_conv = Conv2D(1, kernel_size=(1, 1), activation="relu", name="relation_conv")(
+                    relation_embedding)
                 relation_conv = Lambda(lambda x: K.repeat_elements(x, self.dic_agent_conf["D_DENSE"], 3),
                                        name="expansion")(relation_conv)
                 combine_feature = multiply([lane_conv, relation_conv], name="combine_feature")

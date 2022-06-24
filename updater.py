@@ -1,12 +1,14 @@
-import pickle
 import os
-from config import DIC_AGENTS
+import pickle
 import shutil
+
+from config import DIC_AGENTS
 
 
 class Updater:
 
-    def __init__(self, cnt_round, dic_agent_conf, dic_exp_conf, dic_traffic_env_conf, dic_path, best_round=None, bar_round=None):
+    def __init__(self, cnt_round, dic_agent_conf, dic_exp_conf, dic_traffic_env_conf, dic_path, best_round=None,
+                 bar_round=None):
 
         self.cnt_round = cnt_round
         self.dic_path = dic_path
@@ -15,7 +17,8 @@ class Updater:
         self.dic_agent_conf = dic_agent_conf
         self.agent_name = self.dic_exp_conf["MODEL_NAME"]
 
-        self.agent = DIC_AGENTS[self.agent_name](self.dic_agent_conf, self.dic_traffic_env_conf, self.dic_path, self.cnt_round)
+        self.agent = DIC_AGENTS[self.agent_name](self.dic_agent_conf, self.dic_traffic_env_conf, self.dic_path,
+                                                 self.cnt_round)
 
     def load_sample(self):
 
@@ -27,7 +30,8 @@ class Updater:
             sample_file = open(os.path.join(self.dic_path["PATH_TO_AGGREGATE_SAMPLES"],
                                             "aggregate_samples.pkl"), "rb")
         else:
-            sample_file = open(os.path.join(self.dic_path["PATH_TO_WORK_DIRECTORY"], "train_round", "total_samples" + ".pkl"), "rb")
+            sample_file = open(
+                os.path.join(self.dic_path["PATH_TO_WORK_DIRECTORY"], "train_round", "total_samples" + ".pkl"), "rb")
         try:
             while True:
                 sample_set += pickle.load(sample_file)
@@ -41,9 +45,10 @@ class Updater:
         self.agent.train_network(self.dic_exp_conf)
         if self.dic_exp_conf["PRETRAIN"]:
             self.agent.q_network.save(os.path.join(self.dic_path["PATH_TO_PRETRAIN_MODEL"],
-                                    "%s.h5" % self.dic_exp_conf["TRAFFIC_FILE"][0]))
-            shutil.copy(os.path.join(self.dic_path["PATH_TO_PRETRAIN_MODEL"],"%s.h5" % self.dic_exp_conf["TRAFFIC_FILE"][0]),
-                        os.path.join(self.dic_path["PATH_TO_MODEL"], "round_0.h5"))
+                                                   "%s.h5" % self.dic_exp_conf["TRAFFIC_FILE"][0]))
+            shutil.copy(
+                os.path.join(self.dic_path["PATH_TO_PRETRAIN_MODEL"], "%s.h5" % self.dic_exp_conf["TRAFFIC_FILE"][0]),
+                os.path.join(self.dic_path["PATH_TO_MODEL"], "round_0.h5"))
         elif self.dic_exp_conf["AGGREGATE"]:
             self.agent.q_network.save("model/initial", "aggregate.h5")
             shutil.copy("model/initial/aggregate.h5",

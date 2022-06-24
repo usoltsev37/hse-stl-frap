@@ -1,20 +1,22 @@
 import json
 import os
-import shutil
-import xml.etree.ElementTree as ET
-from generator import Generator
-from construct_sample import ConstructSample
-from updater import Updater
-from multiprocessing import Process
-from model_pool import ModelPool
-import random
 import pickle
-import model_test
-import pandas as pd
-import numpy as np
-from math import isnan
-import sys
+import random
+import shutil
 import time
+import xml.etree.ElementTree as ET
+from math import isnan
+from multiprocessing import Process
+
+import numpy as np
+import pandas as pd
+
+import model_test
+from construct_sample import ConstructSample
+from generator import Generator
+from model_pool import ModelPool
+from updater import Updater
+
 
 class Pipeline:
     _LIST_SUMO_FILES = [
@@ -133,7 +135,7 @@ class Pipeline:
 
     def early_stopping(self, dic_path, cnt_round):
         print("decide whether to stop")
-        record_dir = os.path.join(dic_path["PATH_TO_WORK_DIRECTORY"], "test_round", "round_"+str(cnt_round))
+        record_dir = os.path.join(dic_path["PATH_TO_WORK_DIRECTORY"], "test_round", "round_" + str(cnt_round))
 
         # compute duration
         df_vehicle_inter_0 = pd.read_csv(os.path.join(record_dir, "vehicle_inter_0.csv"),
@@ -149,12 +151,10 @@ class Pipeline:
             mean_duration = np.mean(duration_under_exam)
             std_duration = np.std(duration_under_exam)
             max_duration = np.max(duration_under_exam)
-            if std_duration/mean_duration < 0.1 and max_duration < 1.5 * mean_duration:
+            if std_duration / mean_duration < 0.1 and max_duration < 1.5 * mean_duration:
                 return 1
             else:
                 return 0
-
-
 
     def generator_wrapper(self, cnt_round, cnt_gen, dic_path, dic_exp_conf, dic_agent_conf, dic_traffic_env_conf,
                           best_round=None):
@@ -171,7 +171,8 @@ class Pipeline:
         print("generator_wrapper end")
         return
 
-    def updater_wrapper(self, cnt_round, dic_agent_conf, dic_exp_conf, dic_traffic_env_conf, dic_path, best_round=None, bar_round=None):
+    def updater_wrapper(self, cnt_round, dic_agent_conf, dic_exp_conf, dic_traffic_env_conf, dic_path, best_round=None,
+                        bar_round=None):
 
         updater = Updater(
             cnt_round=cnt_round,
@@ -194,8 +195,8 @@ class Pipeline:
         model_pool.dump_model_pool()
 
         return
-        #self.best_round = model_pool.get()
-        #print("self.best_round", self.best_round)
+        # self.best_round = model_pool.get()
+        # print("self.best_round", self.best_round)
 
     def downsample(self, path_to_log):
 
@@ -306,9 +307,9 @@ class Pipeline:
         self.dic_exp_conf["AGGREGATE"] = False
 
         # train
-    #     self.train(multi_process=multi_process, best_round=best_round, bar_round=bar_round)
-    #
-    # def train(self, multi_process, best_round, bar_round):
+        #     self.train(multi_process=multi_process, best_round=best_round, bar_round=bar_round)
+        #
+        # def train(self, multi_process, best_round, bar_round):
         for cnt_round in range(self.dic_exp_conf["NUM_ROUNDS"]):
             print("round %d starts" % cnt_round)
 
@@ -381,12 +382,14 @@ class Pipeline:
             # ==============  test evaluation =============
             if multi_process:
                 p = Process(target=model_test.test,
-                            args=(self.dic_path["PATH_TO_MODEL"], cnt_round, self.dic_exp_conf["TEST_RUN_COUNTS"], self.dic_traffic_env_conf, False))
+                            args=(self.dic_path["PATH_TO_MODEL"], cnt_round, self.dic_exp_conf["TEST_RUN_COUNTS"],
+                                  self.dic_traffic_env_conf, False))
                 p.start()
                 if self.dic_exp_conf["EARLY_STOP"] or self.dic_exp_conf["MODEL_POOL"]:
                     p.join()
             else:
-                model_test.test(self.dic_path["PATH_TO_MODEL"], cnt_round, self.dic_exp_conf["RUN_COUNTS"], self.dic_traffic_env_conf, if_gui=False)
+                model_test.test(self.dic_path["PATH_TO_MODEL"], cnt_round, self.dic_exp_conf["RUN_COUNTS"],
+                                self.dic_traffic_env_conf, if_gui=False)
 
             # ==============  early stopping =============
             if self.dic_exp_conf["EARLY_STOP"]:
@@ -438,5 +441,5 @@ class Pipeline:
 
             round_end_t = time.time()
             f_timing = open(os.path.join(self.dic_path["PATH_TO_WORK_DIRECTORY"], "timing.txt"), "a+")
-            f_timing.write("round_{0}: {1}\n".format(cnt_round, round_end_t-round_start_t))
+            f_timing.write("round_{0}: {1}\n".format(cnt_round, round_end_t - round_start_t))
             f_timing.close()

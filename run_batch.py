@@ -1,9 +1,10 @@
-import runexp
-import testexp
-import summary
 import argparse
 import os
 import time
+
+import runexp
+import summary
+
 
 def parse_args():
     parser = argparse.ArgumentParser()
@@ -36,14 +37,14 @@ def parse_args():
     parser.add_argument("--min_action_time", type=int, default=10)
     parser.add_argument("--workers", type=int, default=7)
 
-
     parser.add_argument("--visible_gpu", type=str, default="")
 
     return parser.parse_args()
 
+
 if __name__ == "__main__":
     args = parse_args()
-    #memo = "multi_phase/optimal_search_new/new_headway_anon"
+    # memo = "multi_phase/optimal_search_new/new_headway_anon"
     memo = args.memo
     os.environ["CUDA_VISIBLE_DEVICES"] = args.visible_gpu
 
@@ -52,7 +53,7 @@ if __name__ == "__main__":
     print("****************************** runexp ends (generate, train, test)!! ******************************")
     t2 = time.time()
     f_timing = open(os.path.join("records", memo, "timing.txt"), "a+")
-    f_timing.write(str(t2-t1)+'\n')
+    f_timing.write(str(t2 - t1) + '\n')
     f_timing.close()
     summary.main(memo)
     print("****************************** summary_detail ends ******************************")

@@ -1,10 +1,12 @@
 import json
 import os
 import pickle
-from config import DIC_AGENTS, DIC_ENVS
+from math import isnan
+
 import numpy as np
 import pandas as pd
-from math import isnan
+
+from config import DIC_AGENTS, DIC_ENVS
 
 
 def check_all_workers_working(list_cur_p):
@@ -26,11 +28,10 @@ def downsample(path_to_log):
 
 
 def write_summary(dic_path, run_counts, cnt_round):
-
     record_dir = os.path.join(dic_path["PATH_TO_WORK_DIRECTORY"], "test_round", "round_" + str(cnt_round))
     path_to_log = os.path.join(dic_path["PATH_TO_WORK_DIRECTORY"], "test_round", "test_results.csv")
     path_to_seg_log = os.path.join(dic_path["PATH_TO_WORK_DIRECTORY"], "test_round", "test_seg_results.csv")
-    num_seg = run_counts//3600
+    num_seg = run_counts // 3600
 
     if cnt_round == 0:
         df_col = pd.DataFrame(columns=("round", "duration", "vec_in", "vec_out"))
@@ -87,7 +88,7 @@ def write_summary(dic_path, run_counts, cnt_round):
 
 def test(model_dir, cnt_round, run_cnt, dic_traffic_env_conf, if_gui):
     records_dir = model_dir.replace("model", "records")
-    model_round = "round_%d"%cnt_round
+    model_round = "round_%d" % cnt_round
     dic_path = {}
     dic_path["PATH_TO_MODEL"] = model_dir
     dic_path["PATH_TO_WORK_DIRECTORY"] = records_dir
@@ -152,11 +153,11 @@ def test(model_dir, cnt_round, run_cnt, dic_traffic_env_conf, if_gui):
 
         if dic_traffic_env_conf["DONE_ENABLE"]:
             run_cnt_log = open(os.path.join(records_dir, "test_stop_cnt_log.txt"), "a")
-            run_cnt_log.write("%s, %10s, %d\n"%("test", "round_"+str(cnt_round), stop_cnt))
+            run_cnt_log.write("%s, %10s, %d\n" % ("test", "round_" + str(cnt_round), stop_cnt))
             run_cnt_log.close()
 
         write_summary(dic_path, run_cnt, cnt_round)
-        #env.end_sumo()
+        # env.end_sumo()
         if not dic_exp_conf["DEBUG"]:
             path_to_log = os.path.join(dic_path["PATH_TO_WORK_DIRECTORY"], "test_round",
                                        model_round)
@@ -167,7 +168,7 @@ def test(model_dir, cnt_round, run_cnt, dic_traffic_env_conf, if_gui):
     except:
         error_dir = model_round.replace("model", "errors")
         f = open(os.path.join(error_dir, "error_info.txt"), "a")
-        f.write("round_%d fail to test model"%cnt_round)
+        f.write("round_%d fail to test model" % cnt_round)
         f.close()
         pass
         # import sys

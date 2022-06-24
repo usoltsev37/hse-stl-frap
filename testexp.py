@@ -1,10 +1,10 @@
 import json
 import os
+import pickle
 import time
 from multiprocessing import Process
-import pickle
+
 from config import DIC_AGENTS, DIC_ENVS
-import sys
 
 
 def check_all_workers_working(list_cur_p):
@@ -65,8 +65,9 @@ def run_wrapper(dir, one_round, run_cnt, if_gui):
         if not os.path.exists(path_to_log):
             os.makedirs(path_to_log)
         env = DIC_ENVS[dic_traffic_env_conf["SIMULATOR_TYPE"]](path_to_log=path_to_log,
-                         path_to_work_directory=dic_path["PATH_TO_WORK_DIRECTORY"],
-                         dic_traffic_env_conf=dic_traffic_env_conf)
+                                                               path_to_work_directory=dic_path[
+                                                                   "PATH_TO_WORK_DIRECTORY"],
+                                                               dic_traffic_env_conf=dic_traffic_env_conf)
 
         done = False
         state = env.reset()
@@ -99,6 +100,7 @@ def run_wrapper(dir, one_round, run_cnt, if_gui):
         # raise SystemExit(1)
 
     return
+
 
 def main(memo=None):
     # run name
@@ -139,7 +141,7 @@ def main(memo=None):
         test_round_dir = os.path.join("records", memo, traffic, "test_round")
         if os.path.exists(test_round_dir):
             print("exist")
-            #continue
+            # continue
         # if traffic[0:-15] not in given_traffic_list:
         #    continue
         print(traffic)

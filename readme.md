@@ -6,13 +6,14 @@ This is a reinforcement learning pipeline for intelligent traffic signal control
 
 We recommend to run the code through docker. Some brief documentation can be found at https://docs.docker.com/.
 
-1. Please pull the docker image from the docker hub. 
-``docker pull gjzheng/frap:latest``
+1. Please pull the docker image from the docker hub.
+   ``docker pull gjzheng/frap:latest``
 
 2. Please run the built docker image to initiate a docker container. Please remember to mount the code directory.
 
 ```
-docker run -it -v path/to/the/code/repo/:/work/ simulator-test bash
+docker run -it -v /Users/thebest/studing/NIR/algorithms/hse-stl-frap:/work/ frap01 bash
+docker run -it -v /Users/thebest/studing/NIR/algorithms/hse-stl-frap:/work/ gjzheng/frap bash
 cd /work/
 bash example_run.sh
 ```
@@ -49,7 +50,7 @@ Hyperparameters such as learning rate, sample size and the like for the agent ca
 
 More details about this project are demonstrated in this part.
 
-* ``config.py`` 
+* ``config.py``
 
   The whole configuration of this project. Note that some parameters will be replaced in ``runexp.py`` while others can only be changed in this file, please be very careful!!!
 

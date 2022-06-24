@@ -1,18 +1,19 @@
+import copy
+import os
+import pickle as pkl
+import random
+
 import numpy as np
-from keras.layers import Input, Dense, Conv2D, Flatten, BatchNormalization, Activation, Multiply, Add
-from keras.models import Model, model_from_json, load_model
-from keras.optimizers import RMSprop
+from keras import backend as K
+from keras.callbacks import EarlyStopping
+from keras.layers import Dense, Conv2D, Flatten, BatchNormalization, Activation
+from keras.layers import Layer
 from keras.layers.core import Dropout
 from keras.layers.pooling import MaxPooling2D
-from keras import backend as K
-import random
-from keras.layers import Layer
-import os
-from keras.callbacks import EarlyStopping, TensorBoard
-import pickle as pkl
+from keras.models import model_from_json, load_model
+from keras.optimizers import RMSprop
 
 from agent import Agent
-import copy
 
 rotation_matrix_2_p = np.zeros((4, 4))
 j = 2
@@ -25,6 +26,7 @@ j = 4
 for i in range(8):
     rotation_matrix_4_p[i][j] = 1
     j = (j + 1) % 8
+
 
 class Selector(Layer):
 
@@ -107,8 +109,8 @@ class NetworkAgent(Agent):
 
         # ===== check num actions == num phases ============
 
-        #self.num_actions = self.dic_sumo_env_conf["ACTION_DIM"]
-        #self.num_phases = self.dic_sumo_env_conf["NUM_PHASES"]
+        # self.num_actions = self.dic_sumo_env_conf["ACTION_DIM"]
+        # self.num_phases = self.dic_sumo_env_conf["NUM_PHASES"]
         if self.dic_traffic_env_conf["ACTION_PATTERN"] == "switch":
             self.num_actions = 2
         else:
@@ -126,7 +128,7 @@ class NetworkAgent(Agent):
                 self.load_network("round_0")
             else:
                 self.q_network = self.build_network()
-            #self.load_network(self.dic_agent_conf["TRAFFIC_FILE"], file_path=self.dic_path["PATH_TO_PRETRAIN_MODEL"])
+            # self.load_network(self.dic_agent_conf["TRAFFIC_FILE"], file_path=self.dic_path["PATH_TO_PRETRAIN_MODEL"])
             self.q_network_bar = self.build_network_from_copy(self.q_network)
         else:
             try:
@@ -141,7 +143,8 @@ class NetworkAgent(Agent):
                         if "UPDATE_Q_BAR_EVERY_C_ROUND" in self.dic_agent_conf:
                             if self.dic_agent_conf["UPDATE_Q_BAR_EVERY_C_ROUND"]:
                                 self.load_network_bar("round_{0}".format(
-                                    max((best_round - 1) // self.dic_agent_conf["UPDATE_Q_BAR_FREQ"] * self.dic_agent_conf["UPDATE_Q_BAR_FREQ"], 0)))
+                                    max((best_round - 1) // self.dic_agent_conf["UPDATE_Q_BAR_FREQ"] *
+                                        self.dic_agent_conf["UPDATE_Q_BAR_FREQ"], 0)))
                             else:
                                 self.load_network_bar("round_{0}".format(
                                     max(best_round - self.dic_agent_conf["UPDATE_Q_BAR_FREQ"], 0)))
@@ -151,12 +154,13 @@ class NetworkAgent(Agent):
 
                 else:
                     # not use model pool
-                    self.load_network("round_{0}".format(cnt_round-1))
+                    self.load_network("round_{0}".format(cnt_round - 1))
 
                     if "UPDATE_Q_BAR_EVERY_C_ROUND" in self.dic_agent_conf:
                         if self.dic_agent_conf["UPDATE_Q_BAR_EVERY_C_ROUND"]:
                             self.load_network_bar("round_{0}".format(
-                                max((cnt_round - 1) // self.dic_agent_conf["UPDATE_Q_BAR_FREQ"] * self.dic_agent_conf["UPDATE_Q_BAR_FREQ"], 0)))
+                                max((cnt_round - 1) // self.dic_agent_conf["UPDATE_Q_BAR_FREQ"] * self.dic_agent_conf[
+                                    "UPDATE_Q_BAR_FREQ"], 0)))
                         else:
                             self.load_network_bar("round_{0}".format(
                                 max(cnt_round - self.dic_agent_conf["UPDATE_Q_BAR_FREQ"], 0)))
@@ -206,13 +210,14 @@ class NetworkAgent(Agent):
         if file_path == None:
             file_path = self.dic_path["PATH_TO_MODEL"]
         self.q_network = load_model(os.path.join(file_path, "%s.h5" % file_name), custom_objects={"Selector": Selector})
-        print("succeed in loading model %s"%file_name)
+        print("succeed in loading model %s" % file_name)
 
     def load_network_bar(self, file_name, file_path=None):
         if file_path == None:
             file_path = self.dic_path["PATH_TO_MODEL"]
-        self.q_network_bar = load_model(os.path.join(file_path, "%s.h5" % file_name), custom_objects={"Selector": Selector})
-        print("succeed in loading model %s"%file_name)
+        self.q_network_bar = load_model(os.path.join(file_path, "%s.h5" % file_name),
+                                        custom_objects={"Selector": Selector})
+        print("succeed in loading model %s" % file_name)
 
     def save_network(self, file_name):
         self.q_network.save(os.path.join(self.dic_path["PATH_TO_MODEL"], "%s.h5" % file_name))
@@ -240,7 +245,6 @@ class NetworkAgent(Agent):
                         loss=self.dic_agent_conf["LOSS_FUNCTION"])
         return network
 
-
     def prepare_Xs_Y(self, memory, dic_exp_conf):
 
         # ==============
@@ -259,15 +263,15 @@ class NetworkAgent(Agent):
                 print("priority")
                 sample_slice = []
                 num_sample_list = [
-                                   int(self.dic_agent_conf["MAX_MEMORY_LEN"] * 1 / 4),
-                                   int(self.dic_agent_conf["MAX_MEMORY_LEN"] * 1 / 4),
-                                   int(self.dic_agent_conf["MAX_MEMORY_LEN"] * 1 / 4),
-                                   int(self.dic_agent_conf["MAX_MEMORY_LEN"] * 1 / 4),
-                                   ]
+                    int(self.dic_agent_conf["MAX_MEMORY_LEN"] * 1 / 4),
+                    int(self.dic_agent_conf["MAX_MEMORY_LEN"] * 1 / 4),
+                    int(self.dic_agent_conf["MAX_MEMORY_LEN"] * 1 / 4),
+                    int(self.dic_agent_conf["MAX_MEMORY_LEN"] * 1 / 4),
+                ]
                 for i in range(ind_end - 1, -1, -1):
                     one_sample = memory[i]
-                    #print("one_sample", one_sample)
-                    #ave_num_veh = int(np.average(np.array(one_sample[0]['lane_num_vehicle'])))
+                    # print("one_sample", one_sample)
+                    # ave_num_veh = int(np.average(np.array(one_sample[0]['lane_num_vehicle'])))
                     ave_num_veh = max(np.array(one_sample[0]['lane_num_vehicle']))
                     interval_id = ave_num_veh // 10
                     if num_sample_list[interval_id] > 0:
@@ -280,9 +284,11 @@ class NetworkAgent(Agent):
                 sample_size = min(self.dic_agent_conf["SAMPLE_SIZE"], len(sample_slice))
                 sample_slice = random.sample(sample_slice, sample_size)
                 ## log
-                pkl.dump(sample_slice, file=open(os.path.join(self.dic_path['PATH_TO_WORK_DIRECTORY'], "train_round", "round_"+str(self.cnt_round), "update_sample.pkl"), "ab"))
-                #f = open(os.path.join(self.dic_path['PATH_TO_WORK_DIRECTORY'], "train_round", "update_sample_log.txt"), "a")
-                #f.write('%d, %d, %d, %d\n'%(num_sample_list[0], num_sample_list[1], num_sample_list[2], num_sample_list[3]))
+                pkl.dump(sample_slice, file=open(
+                    os.path.join(self.dic_path['PATH_TO_WORK_DIRECTORY'], "train_round", "round_" + str(self.cnt_round),
+                                 "update_sample.pkl"), "ab"))
+                # f = open(os.path.join(self.dic_path['PATH_TO_WORK_DIRECTORY'], "train_round", "update_sample_log.txt"), "a")
+                # f.write('%d, %d, %d, %d\n'%(num_sample_list[0], num_sample_list[1], num_sample_list[2], num_sample_list[3]))
             else:
                 ind_sta = max(0, ind_end - self.dic_agent_conf["MAX_MEMORY_LEN"])
                 memory_after_forget = memory[ind_sta: ind_end]
@@ -297,7 +303,7 @@ class NetworkAgent(Agent):
 
                 new_sample_slice = []
                 for sample in sample_slice:
-                    #print(sample[0]['lane_num_vehicle'], sample[0]['cur_phase'])
+                    # print(sample[0]['lane_num_vehicle'], sample[0]['cur_phase'])
                     if len(sample[0]['lane_num_vehicle']) == 8:
                         rotation_matrix = rotation_matrix_4_p
                     elif len(sample[0]['lane_num_vehicle']) == 4:
@@ -352,9 +358,8 @@ class NetworkAgent(Agent):
                    self.dic_traffic_env_conf["LIST_STATE_FEATURE"]]
         self.Y = np.array(Y)
 
-
     def convert_state_to_input(self, s):
-        
+
         if self.dic_traffic_env_conf["BINARY_PHASE_EXPANSION"]:
             inputs = []
             if self.num_phases == 2:
@@ -369,7 +374,6 @@ class NetworkAgent(Agent):
             return inputs
         else:
             return [np.array([s[feature]]) for feature in self.dic_traffic_env_conf["LIST_STATE_FEATURE"]]
-
 
     def choose_action(self, count, state):
 
