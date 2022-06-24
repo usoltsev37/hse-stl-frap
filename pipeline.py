@@ -100,7 +100,7 @@ class Pipeline:
         # copy sumo files
 
         shutil.copy(os.path.join(self.dic_path["PATH_TO_DATA"], self.dic_exp_conf["TRAFFIC_FILE"][0]),
-                        os.path.join(path, self.dic_exp_conf["TRAFFIC_FILE"][0]))
+                    os.path.join(path, self.dic_exp_conf["TRAFFIC_FILE"][0]))
         shutil.copy(os.path.join(self.dic_path["PATH_TO_DATA"], self.dic_exp_conf["ROADNET_FILE"]),
                     os.path.join(path, self.dic_exp_conf["ROADNET_FILE"]))
 
@@ -306,6 +306,9 @@ class Pipeline:
         self.dic_exp_conf["AGGREGATE"] = False
 
         # train
+    #     self.train(multi_process=multi_process, best_round=best_round, bar_round=bar_round)
+    #
+    # def train(self, multi_process, best_round, bar_round):
         for cnt_round in range(self.dic_exp_conf["NUM_ROUNDS"]):
             print("round %d starts" % cnt_round)
 

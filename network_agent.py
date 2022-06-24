@@ -6,7 +6,7 @@ from keras.layers.core import Dropout
 from keras.layers.pooling import MaxPooling2D
 from keras import backend as K
 import random
-from keras.engine.topology import Layer
+from keras.layers import Layer
 import os
 from keras.callbacks import EarlyStopping, TensorBoard
 import pickle as pkl
@@ -93,13 +93,13 @@ class NetworkAgent(Agent):
     def __init__(self, dic_agent_conf, dic_traffic_env_conf, dic_path, cnt_round, best_round=None, bar_round=None):
 
         import tensorflow as tf
-        import keras.backend.tensorflow_backend as KTF
+        import keras.backend as KTF
 
-        tf_config = tf.ConfigProto(
+        tf_config = tf.compat.v1.ConfigProto(
             device_count={'GPU': 0}
         )
         tf_config.gpu_options.allow_growth = True
-        session = tf.Session(config=tf_config)
+        session = tf.compat.v1.Session(config=tf_config)
         KTF.set_session(session)
 
         super(NetworkAgent, self).__init__(
@@ -332,9 +332,12 @@ class NetworkAgent(Agent):
             for feature_name in self.dic_traffic_env_conf["LIST_STATE_FEATURE"]:
                 _state.append([state[feature_name]])
                 _next_state.append([next_state[feature_name]])
-            target = self.q_network.predict(_state)
+            # target = self.q_network.predict(_state)
+            target = self.q_network.predict([np.array(s) for s in _state])
+            # target = self.q_network.predict([np.array(s) for s in _state])
 
-            next_state_qvalues = self.q_network_bar.predict(_next_state)
+            # next_state_qvalues = self.q_network_bar.predict(_next_state)
+            next_state_qvalues = self.q_network_bar.predict([np.array(s) for s in _next_state])
 
             if self.dic_agent_conf["LOSS_FUNCTION"] == "mean_squared_error":
                 final_target = np.copy(target[0])

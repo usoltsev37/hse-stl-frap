@@ -4,7 +4,7 @@ import json
 import sys
 import pandas as pd
 import os
-import engine
+import cityflow as engine
 from script import get_traffic_volume, get_total_traffic_volume
 
 class Intersection:
@@ -35,7 +35,7 @@ class Intersection:
 
         self.dic_exiting_approach_to_edge = {
             approach: "road_{0}_{1}_{2}".format(inter_id[0], inter_id[1], self.dic_approach_to_node[approach]) for
-        approach in self.list_approachs}
+            approach in self.list_approachs}
         self.dic_entering_approach_lanes = {"W": [0], "E": [0], "S": [0], "N": [0]}
         self.dic_exiting_approach_lanes = {"W": [0], "E": [0], "S": [0], "N": [0]}
 
@@ -304,7 +304,7 @@ class Intersection:
                 lane_vector[pos_grid] = 1
             list_lane_vector.append(lane_vector)
         return np.array(list_lane_vector)
-    
+
     # debug
     def _get_vehicle_info(self, veh_id):
         try:
@@ -395,14 +395,39 @@ class AnonEnv:
             f.close()
 
     def reset(self):
+        print("asdf")
+        # print(self.dic_traffic_env_conf["INTERVAL"],
+        #       self.dic_traffic_env_conf["THREADNUM"],
+        #       self.dic_traffic_env_conf["SAVEREPLAY"],
+        #       self.dic_traffic_env_conf["RLTRAFFICLIGHT"])
+
+        cityflow_config = {
+            "interval": self.dic_traffic_env_conf["INTERVAL"],
+            "seed": 0,
+            "laneChange": False,
+            "dir": self.path_to_work_directory+"/",
+            "roadnetFile": self.dic_traffic_env_conf["ROADNET_FILE"],
+            "flowFile": self.dic_traffic_env_conf["TRAFFIC_FILE"],
+            "rlTrafficLight": self.dic_traffic_env_conf["RLTRAFFICLIGHT"],
+            "saveReplay": self.dic_traffic_env_conf["SAVEREPLAY"],
+            "roadnetLogFile": "frontend/web/roadnetLogFile.json",
+            "replayLogFile": "frontend/web/replayLogFile.txt"
+        }
+        print("=========================")
+        print(cityflow_config)
+
+        with open(os.path.join(self.path_to_work_directory,"cityflow.config"), "w") as json_file:
+            json.dump(cityflow_config, json_file)
 
         # self.eng.reset() to be implemented
-        self.eng = engine.Engine(self.dic_traffic_env_conf["INTERVAL"],
-                                 self.dic_traffic_env_conf["THREADNUM"],
-                                 self.dic_traffic_env_conf["SAVEREPLAY"],
-                                 self.dic_traffic_env_conf["RLTRAFFICLIGHT"])
-        self.load_roadnet(self.dic_traffic_env_conf["ROADNET_FILE"])
-        self.load_flow(self.dic_traffic_env_conf["TRAFFIC_FILE"])
+        self.eng = engine.Engine(os.path.join(self.path_to_work_directory,"cityflow.config"),
+                                 thread_num=self.dic_traffic_env_conf["THREADNUM"])
+        # self.eng = engine.Engine(self.dic_traffic_env_conf["INTERVAL"],
+        #                          self.dic_traffic_env_conf["THREADNUM"],
+        #                          self.dic_traffic_env_conf["SAVEREPLAY"],
+        #                          self.dic_traffic_env_conf["RLTRAFFICLIGHT"])
+        # self.load_roadnet(self.dic_traffic_env_conf["ROADNET_FILE"])
+        # self.load_flow(self.dic_traffic_env_conf["TRAFFIC_FILE"])
 
 
         # initialize intersections (grid)
@@ -452,11 +477,11 @@ class AnonEnv:
             else:
                 if i == 0:
                     print("time: {0}, phase: {1}, time this phase: {2}, action: {3}".format(instant_time,
-                                                                                        before_action_feature[0][
-                                                                                            "cur_phase"],
-                                                                                        before_action_feature[0][
-                                                                                            "time_this_phase"],
-                                                                                        action_in_sec_display[0]))
+                                                                                            before_action_feature[0][
+                                                                                                "cur_phase"],
+                                                                                            before_action_feature[0][
+                                                                                                "time_this_phase"],
+                                                                                            action_in_sec_display[0]))
 
             # _step
             self._inner_step(action_in_sec)
@@ -559,8 +584,8 @@ class AnonEnv:
 
         for inter_ind in range(len(self.list_intersection)):
             self.list_inter_log[inter_ind].append({"time": cur_time,
-                                                    "state": before_action_feature[inter_ind],
-                                                    "action": action[inter_ind]})
+                                                   "state": before_action_feature[inter_ind],
+                                                   "action": action[inter_ind]})
 
     def bulk_log(self):
 
@@ -590,8 +615,11 @@ class AnonEnv:
         vol = get_total_traffic_volume(self.dic_traffic_env_conf["TRAFFIC_FILE"])
         #self.eng.print_log(os.path.join("data", "frontend", "web", "roadnet_1_1.json"),
         #                         os.path.join("data", "frontend", "web", "replay_1_1_%s.txt"%vol))
-        self.eng.print_log(os.path.join(self.path_to_log, "roadnet_1_1.json"),
-                           os.path.join(self.path_to_log, "replay_1_1_%s.txt"%vol))
+
+        # TODO IMPORTANT !!!!!!!!!!!!!!!
+
+        # self.eng.print_log(os.path.join(self.path_to_log, "roadnet_1_1.json"),
+        #                    os.path.join(self.path_to_log, "replay_1_1_%s.txt"%vol))
 
         #print("log files:", os.path.join("data", "frontend", "roadnet_1_1_test.json"))
 

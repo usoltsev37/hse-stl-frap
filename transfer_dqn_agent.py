@@ -1,7 +1,8 @@
 from keras.layers import Input, Dense, Flatten, Reshape, Layer, Lambda, RepeatVector, Activation, Embedding, Conv2D
 from keras.models import Model, model_from_json, load_model
 from keras.optimizers import RMSprop, Adam
-from keras.layers.merge import concatenate, add, dot, maximum, multiply
+# from keras.layers.merge import concatenate, add, dot, maximum, multiply
+from keras.layers import concatenate, add, dot, maximum, multiply
 from network_agent import NetworkAgent, conv2d_bn, Selector
 from keras import backend as K
 import numpy as np
